@@ -1,0 +1,162 @@
+
+Config steps for bank net design
+
+1. basic setttings to all devices pluss ssh on the routers and 13 swithces
+2. VLANs assignment plus all access and trunk ports
+3. Switchport security to all 12 switches
+4. Subnetting and IP addressing
+5. OSPF on the routers and 13 swiitches
+6. Static IP address to server room devices
+7. DHCP SERVER device configuration
+8. Inter-VLAN routing on the 13 switches
+9. Wirless network configuration
+10. verifying and testing configuration
+
+
+
+________access layer switch_______
+
+
+enable
+conf t
+hostname F04-svr-sw
+banner motd #This is floor-04 server room swith#
+line console 0
+password banknet
+login
+exit
+line vty 0 15
+password banknet
+login
+exit
+no ip domain-lookup
+enable password banknet
+service password-encryption
+
+
+int range fa0/1-2
+switchport mode trunk
+exit
+
+int range fa0/3-24
+switchport mode access
+switchport access vlan 120
+switchport port-security
+switchport port-security maximum 2
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+exit
+do write
+
+
+_________layer 3 switch & routers_______
+
+
+en
+conf t
+hostname bank_r04
+banner motd #AUTHORISED PERSONALS ONLY#
+
+line console 0
+password banknet
+login
+exit
+
+ip domain-name bank.net
+username banknet password banknet
+crypto key generate rsa
+1024
+line vty 0 15
+login local
+transport input ssh
+exit 
+                                    
+no ip domain-lookup
+enable password banknet
+service password-encryption
+
+do write
+
+
+
+int range fa0/1-2
+no switchport
+exit
+int range fa0/3-8
+switchport trunk encapsulation dot1q
+exit
+do write
+
+
+
+
+-----Port security and VLAN configuration for access layer switch-------
+
+
+
+int fa0//1-2
+switchport mode trunk
+exit
+
+int range fa0/3-24
+switchport mode access
+switchport access vlan 10
+swicthport port-security
+swicthport port-security maximum 2
+swicthport port-security mac-address sticky
+swicthport port-securityviolation shutdown
+do write
+
+
+
+=====================================
+conf t
+int f0/1
+ip address 10.10.36.1 255.255.255.252
+no shut
+exit
+int f0/2
+ip address 10.10.32.1 255.255.255.252
+no shut
+exit
+do write mem
+
+
+=====================================
+--------routers-----------
+=====================================
+
+
+conf t
+int g0/1
+ip address 10.10.30.2 255.255.255.252
+no shut
+exit
+
+
+int g0/2
+ip address 10.10.32.2 255.255.255.252
+no shut
+exit
+
+
+int g0/0
+ip address 10.10.24.2 255.255.255.252
+no shut
+exit
+
+
+int s0/3/0
+ip address 10.10.28.2 255.255.255.252
+no shut
+exit
+
+
+int s0/3/1
+ip address 10.10.20.2 255.255.255.252
+no shut
+exit
+
+do write mem
+
+
